@@ -1,4 +1,4 @@
-(defun private-move-splitter-left (arg)
+(defun core-move-splitter-left (arg)
   "Move window splitter left."
   (interactive "p")
   (if (let ((windmove-wrap-around))
@@ -6,7 +6,7 @@
       (shrink-window-horizontally arg)
     (enlarge-window-horizontally arg)))
 
-(defun private-move-splitter-right (arg)
+(defun core-move-splitter-right (arg)
   "Move window splitter right."
   (interactive "p")
   (if (let ((windmove-wrap-around))
@@ -14,7 +14,7 @@
       (enlarge-window-horizontally arg)
     (shrink-window-horizontally arg)))
 
-(defun private-move-splitter-up (arg)
+(defun core-move-splitter-up (arg)
   "Move window splitter up."
   (interactive "p")
   (if (let ((windmove-wrap-around))
@@ -22,7 +22,7 @@
       (enlarge-window arg)
     (shrink-window arg)))
 
-(defun private-move-splitter-down (arg)
+(defun core-move-splitter-down (arg)
   "Move window splitter down."
   (interactive "p")
   (if (let ((windmove-wrap-around))
@@ -30,12 +30,12 @@
       (shrink-window arg)
     (enlarge-window arg)))
 
-(defhydra private-move-splitter ()
+(defhydra core-move-splitter ()
   "splitter"
-  ("h" private-move-splitter-left)
-  ("j" private-move-splitter-down)
-  ("k" private-move-splitter-up)
-  ("l" private-move-splitter-right)
+  ("h" core-move-splitter-left)
+  ("j" core-move-splitter-down)
+  ("k" core-move-splitter-up)
+  ("l" core-move-splitter-right)
   ("q" nil "quit"))
 
 (provide 'core-hydra)

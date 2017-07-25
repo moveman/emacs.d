@@ -4,6 +4,8 @@ A clone of https://github.com/syl20bnr/spacemacs.
 
 # Usage
 
+See full configuration [here](core.org).
+
 ## Global Key Bindings
 
 ### Buffer

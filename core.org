@@ -1,0 +1,26 @@
+* Configurations
+:properties:
+:header-args:emacs-lisp: :tangle yes
+:end:
+
+** User Interface
+
+*** Remove unnecessary GUI elements
+
+#+begin_src emacs-lisp
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
+(tool-bar-mode -1)
+#+end_src
+
+*** Don't make the cursor blink
+
+#+begin_src emacs-lisp
+(blink-cursor-mode -1)
+#+end_src
+
+*** Don't show the startup screen
+
+#+begin_src emacs-lisp
+(setq inhibit-splash-screen t)
+#+end_src

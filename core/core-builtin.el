@@ -2,77 +2,49 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 
-(defconst private-cache-dir (expand-file-name "~/.emacs.d/.cache/"))
+(defconst core-cache-directory (expand-file-name "~/.emacs.d/.cache/"))
 
-;; Create the cache directory.
-(make-directory private-cache-dir t)
+(defconst core-temporary-directory (format "%s%s%s/" temporary-file-directory "emacs" (user-uid)))
 
-(defconst private-tmp-dir (format "%s%s%s/"
-                                  temporary-file-directory
-                                  "emacs"
-                                  (user-uid)))
+(defun core-prog-mode-config ()
+  (modify-syntax-entry ?_ "w"))
 
-;; Auto-Saving: from time to time, Emacs automatically saves each
-;; changed file in a separate file.
-(setq auto-save-file-name-transforms `((".*" ,private-tmp-dir t)))
+(defun core-find-emacs-help ()
+  (interactive)
+  (find-file-other-window (concat user-emacs-directory "README.md")))
 
-(setq auto-save-list-file-prefix (concat private-tmp-dir ".saves-"))
+(setq auto-save-file-name-transforms `((".*" ,core-temporary-directory t)))
 
-;; Backup: Emacs saves a backup file the first time the file is saved
-;; from a buffer. Subsequent saves will not change the backup file.
-(setq backup-directory-alist `((".*" . ,private-tmp-dir)))
+(setq auto-save-list-file-prefix (concat core-temporary-directory ".saves-"))
 
-;; Bookmark
-(setq bookmark-default-file (concat private-cache-dir "bookmarks"))
+(setq backup-directory-alist `((".*" . ,core-temporary-directory)))
 
-;; Customization can be saved to a separate file instead of init.el.
-(setq custom-file (concat private-cache-dir "custom.el"))
+(setq bookmark-default-file (concat core-cache-directory "bookmarks"))
 
-(load custom-file t)
+(setq custom-file (concat core-cache-directory "custom.el"))
 
-;; Change the default value for all buffers.
-(setq-default indent-tabs-mode nil)
-
-;; No splash screen.
-(setq inhibit-splash-screen t)
-
-;; Never recenter the point when scrolling.
 (setq scroll-conservatively 101)
 
-;; No beep
 (setq visible-bell t)
 
-;; Don't show menu-bar and tool-bar.
-(menu-bar-mode -1)
+(setq-default indent-tabs-mode nil)
 
-(tool-bar-mode -1)
-
-;; Enable automatic paren pairing and visualization.
 (electric-pair-mode +1)
 
 (show-paren-mode +1)
 
-;; Emacs-Lisp mode.
-(defun private-lisp-mode-config ()
-  (modify-syntax-entry ?- "w"))
+(add-hook 'prog-mode-hook #'core-prog-mode-config)
 
-(add-hook 'emacs-lisp-mode-hook #'private-lisp-mode-config)
+(evil-set-initial-state 'package-menu-mode 'motion)
 
-;; Prog mode.
-(defun private-prog-mode-config ()
-  (modify-syntax-entry ?_ "w"))
+(load custom-file t)
 
-(add-hook 'prog-mode-hook #'private-prog-mode-config)
-
-;; Global key bindings.
-(defun private-find-emacs-help ()
-  (interactive)
-  (find-file-other-window (concat user-emacs-directory "README.md")))
+(make-directory core-cache-directory t)
 
 (bind-keys
  :map universal-argument-map
  ("SPC u" . universal-argument-more)
- :map private-global-map
+ :map core-global-map
  ("!"   . shell-command)
  ("SPC" . execute-extended-command)
  ("bb"  . switch-to-buffer)
@@ -80,7 +52,7 @@
  ("bl"  . buffer-menu)
  ("bo"  . mode-line-other-buffer)
  ("ff"  . find-file)
- ("fh"  . private-find-emacs-help)
+ ("fh"  . core-find-emacs-help)
  ("fi"  . imenu)
  ("fj"  . dired-jump)
  ("fs"  . save-buffer)

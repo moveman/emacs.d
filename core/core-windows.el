@@ -1,7 +1,7 @@
 (require 'core-hydra)
 
 (use-package ace-window
-  :bind (:map private-global-map
+  :bind (:map core-global-map
          ("wo" . aw-flip-window)
          ("ww" . ace-window))
   :init
@@ -19,15 +19,15 @@
 
 (use-package winner
   :bind
-  (:map private-global-map
+  (:map core-global-map
    ("wr" . winner-redo)
    ("wu" . winner-undo))
   :init
   (winner-mode +1))
 
 (bind-keys
- :map private-global-map
- ("w." . private-move-splitter/body)
+ :map core-global-map
+ ("w." . core-move-splitter/body)
  ("w=" . balance-windows)
  ("wd" . delete-window)
  ("wm" . delete-other-windows)
