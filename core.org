@@ -59,6 +59,11 @@
 #+end_src
 
 #+begin_src emacs-lisp
+  (use-package evil-magit
+    :after magit)
+#+end_src
+
+#+begin_src emacs-lisp
   (use-package evil-matchit
     :config
     (global-evil-matchit-mode +1))
@@ -175,6 +180,7 @@
 
 #+begin_src emacs-lisp
   (setq inhibit-splash-screen t)
+  (setq initial-scratch-message "")
 #+end_src
 
 ** dired-x
@@ -279,6 +285,15 @@
            ("s" . counsel-ag))
     :config
     (counsel-mode +1))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package counsel-projectile
+    :after projectile
+    :bind (:map core-global-map
+           ("ps" . counsel-projectile-ag))
+    :config
+    (counsel-projectile-on))
 #+end_src
 
 ** env
@@ -396,8 +411,6 @@ Get environment variables from the shell.
            ("gf" . magit-file-popup)
            ("gl" . magit-log-popup)
            ("gs" . magit-status)))
-
-  (use-package evil-magit)
 #+end_src
 
 ** projectile
@@ -425,12 +438,6 @@ Get environment variables from the shell.
     (setq projectile-switch-project-action 'projectile-dired)
     :config
     (projectile-global-mode +1))
-
-  (use-package counsel-projectile
-    :bind (:map core-global-map
-           ("ps" . counsel-projectile-ag))
-    :init
-    (counsel-projectile-on))
 #+end_src
 
 ** swiper
