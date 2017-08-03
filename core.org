@@ -184,12 +184,6 @@ Revert ~fci-rule-color~ to its original value.
     (setq fci-rule-color "#cccccc"))
 #+end_src
 
-** dired-x
-
-#+begin_src emacs-lisp
-  (require 'dired-x) ; `dired-jump'
-#+end_src
-
 ** yes-or-no
 
 #+begin_src emacs-lisp
