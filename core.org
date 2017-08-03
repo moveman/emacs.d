@@ -2,10 +2,12 @@
 :properties:
 :header-args:emacs-lisp: :tangle yes
 :end:
-** cache
+** storage
 
 #+begin_src emacs-lisp
-  (defconst core-cache-directory (expand-file-name "~/.emacs.d/.cache/"))
+  (defconst core-cache-directory
+    (expand-file-name "~/.emacs.d/.cache/"))
+
   (make-directory core-cache-directory t)
 #+end_src
 
@@ -19,11 +21,11 @@
 #+begin_src emacs-lisp
   (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
                            ("melpa" . "http://melpa.org/packages/")
-                           ("melpa-stable" . "http://stable.melpa.org/packages/")))
+                           ("melpa-s" . "http://stable.melpa.org/packages/")))
 
   (setq package-archive-priorities '(("gnu" . 10)
                                      ("melpa" . 15)
-                                     ("melpa-stable" . 20)))
+                                     ("melpa-s" . 20)))
 #+end_src
 
 ** use-package
@@ -82,7 +84,7 @@
 #+end_src
 
 #+begin_src emacs-lisp
-(evil-set-initial-state 'package-menu-mode 'motion)
+  (evil-set-initial-state 'package-menu-mode 'motion)
 #+end_src
 
 ** bind-map
@@ -152,8 +154,11 @@
 
 #+begin_src emacs-lisp
   (blink-cursor-mode -1)
+
   (menu-bar-mode -1)
+
   (scroll-bar-mode -1)
+
   (tool-bar-mode -1)
 #+end_src
 
@@ -168,12 +173,13 @@
     (spaceline-emacs-theme))
 #+end_src
 
+Revert ~fci-rule-color~ to its original value.
+
 #+begin_src emacs-lisp
   (use-package zenburn-theme
     :config
     (load-theme 'zenburn t)
-    ;; Override the original setting in zenburn.
-    (setq fci-rule-color "#D0BF8F"))
+    (setq fci-rule-color "#cccccc"))
 #+end_src
 
 ** initial screen
