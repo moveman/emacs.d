@@ -98,9 +98,11 @@
     :override-minor-modes t)
 #+end_src
 
-** key-bindings
+** bind-key
 
 #+begin_src emacs-lisp
+  (use-package bind-key)
+
   (bind-keys
    :map universal-argument-map
    ("SPC u" . universal-argument-more)
@@ -182,13 +184,6 @@ Revert ~fci-rule-color~ to its original value.
     (setq fci-rule-color "#cccccc"))
 #+end_src
 
-** initial screen
-
-#+begin_src emacs-lisp
-  (setq inhibit-splash-screen t)
-  (setq initial-scratch-message "")
-#+end_src
-
 ** dired-x
 
 #+begin_src emacs-lisp
@@ -209,6 +204,7 @@ Revert ~fci-rule-color~ to its original value.
 #+end_src
 
 ** settings
+
 #+begin_src emacs-lisp
   (setq auto-save-file-name-transforms `((".*" ,core-temporary-directory t)))
   (setq auto-save-list-file-prefix (concat core-temporary-directory ".saves-"))
@@ -216,7 +212,14 @@ Revert ~fci-rule-color~ to its original value.
   (setq bookmark-default-file (concat core-cache-directory "bookmarks"))
   (setq eshell-cmpl-ignore-case t)
   (setq eshell-directory-name (concat core-cache-directory "eshell/"))
+  (setq inhibit-splash-screen t)
+  (setq initial-scratch-message "")
   (setq recentf-save-file (concat core-cache-directory "recentf"))
+  (setq ring-bell-function 'ignore)
+  (setq scroll-conservatively 101)
+  (setq scroll-preserve-screen-position t)
+
+  (setq-default indent-tabs-mode nil)
 #+end_src
 
 ** custom
@@ -224,24 +227,6 @@ Revert ~fci-rule-color~ to its original value.
 #+begin_src emacs-lisp
   (setq custom-file (concat core-cache-directory "custom.el"))
   (load custom-file t)
-#+end_src
-
-** scroll
-
-#+begin_src emacs-lisp
-  (setq scroll-conservatively 101)
-#+end_src
-
-** visible-bell
-
-#+begin_src emacs-lisp
-  (setq visible-bell t)
-#+end_src
-
-** indent
-
-#+begin_src emacs-lisp
-  (setq-default indent-tabs-mode nil)
 #+end_src
 
 ** paren
