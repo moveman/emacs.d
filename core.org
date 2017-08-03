@@ -2,620 +2,727 @@
 :properties:
 :header-args:emacs-lisp: :tangle yes
 :end:
-
-** User Interface
-
-*** Remove unnecessary GUI elements
+** cache
 
 #+begin_src emacs-lisp
-(menu-bar-mode -1)
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
+  (defconst core-cache-directory (expand-file-name "~/.emacs.d/.cache/"))
+  (make-directory core-cache-directory t)
 #+end_src
 
-*** Don't make the cursor blink
-
 #+begin_src emacs-lisp
-(blink-cursor-mode -1)
+  (defconst core-temporary-directory
+    (format "%s%s%s/" temporary-file-directory "emacs" (user-uid)))
 #+end_src
 
-*** Don't show the startup screen
+** package
 
 #+begin_src emacs-lisp
-(setq inhibit-splash-screen t)
+  (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+                           ("melpa" . "http://melpa.org/packages/")
+                           ("melpa-stable" . "http://stable.melpa.org/packages/")))
+
+  (setq package-archive-priorities '(("gnu" . 10)
+                                     ("melpa" . 15)
+                                     ("melpa-stable" . 20)))
 #+end_src
 
-
-** Boot
+** use-package
 
 #+begin_src emacs-lisp
-(setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-                         ("melpa" . "http://melpa.org/packages/")
-                         ("melpa-stable" . "http://stable.melpa.org/packages/")))
+  (unless (file-exists-p package-user-dir)
+    (package-refresh-contents)
+    (package-install 'use-package))
 
-(setq package-archive-priorities '(("gnu" . 10)
-                                   ("melpa" . 15)
-                                   ("melpa-stable" . 20)))
-
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
-
-(setq use-package-always-ensure t)
-
-(use-package bind-map)
-
-(use-package evil
-  :demand t
-  :bind (:map evil-insert-state-map
-         ("C-a" . nil)
-         ("C-d" . nil)
-         ("C-e" . nil)
-         ("C-k" . nil)
-         ("C-n" . nil)
-         ("C-p" . nil)
-         ("C-y" . nil)
-         :map evil-normal-state-map
-         ("RET" . evil-next-line))
-  :init
-  (setq evil-want-C-u-scroll t)
-  (setq evil-want-Y-yank-to-eol t)
-  :config
-  (evil-mode +1))
-
-(bind-map core-global-map
-  :keys ("M-m")
-  :evil-keys ("SPC")
-  :override-minor-modes t)
+  (setq use-package-always-ensure t)
 #+end_src
 
-
-** Built-in
+** evil
 
 #+begin_src emacs-lisp
-(require 'dired-x) ; `dired-jump'
+  (use-package evil
+    :demand t
+    :bind (:map evil-insert-state-map
+           ("C-a" . nil)
+           ("C-d" . nil)
+           ("C-e" . nil)
+           ("C-k" . nil)
+           ("C-n" . nil)
+           ("C-p" . nil)
+           ("C-y" . nil)
+           :map evil-normal-state-map
+           ("RET" . evil-next-line))
+    :init
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-Y-yank-to-eol t)
+    :config
+    (evil-mode +1))
+#+end_src
 
-(defalias 'yes-or-no-p 'y-or-n-p)
+#+begin_src emacs-lisp
+  (use-package evil-matchit
+    :config
+    (global-evil-matchit-mode +1))
+#+end_src
 
-(defconst core-cache-directory (expand-file-name "~/.emacs.d/.cache/"))
+#+begin_src emacs-lisp
+  (use-package evil-surround
+    :config
+    (global-evil-surround-mode +1))
+#+end_src
 
-(defconst core-temporary-directory (format "%s%s%s/" temporary-file-directory "emacs" (user-uid)))
+#+begin_src emacs-lisp
+  (use-package evil-visualstar
+    :config
+    (global-evil-visualstar-mode +1))
+#+end_src
 
-(defun core-prog-mode-config ()
-  (modify-syntax-entry ?_ "w"))
+#+begin_src emacs-lisp
+(evil-set-initial-state 'package-menu-mode 'motion)
+#+end_src
 
+** bind-map
+
+#+begin_src emacs-lisp
+  (use-package bind-map)
+
+  (bind-map core-global-map
+    :keys ("M-m")
+    :evil-keys ("SPC")
+    :override-minor-modes t)
+#+end_src
+
+** key-bindings
+
+#+begin_src emacs-lisp
+  (bind-keys
+   :map universal-argument-map
+   ("SPC u" . universal-argument-more)
+   :map core-global-map
+   ("!"   . shell-command)
+   ("SPC" . execute-extended-command)
+   ("bb"  . switch-to-buffer)
+   ("bd"  . kill-this-buffer)
+   ("bl"  . buffer-menu)
+   ("bo"  . mode-line-other-buffer)
+   ("ff"  . find-file)
+   ("fh"  . core-find-emacs-help)
+   ("fi"  . imenu)
+   ("fj"  . dired-jump)
+   ("fs"  . save-buffer)
+   ("qe"  . save-buffers-kill-emacs)
+   ("qq"  . save-buffers-kill-terminal)
+   ("u"   . universal-argument)
+   ("w."  . core-move-splitter/body)
+   ("w="  . balance-windows)
+   ("wH"  . evil-window-move-far-left)
+   ("wJ"  . evil-window-move-very-bottom)
+   ("wK"  . evil-window-move-very-top)
+   ("wL"  . evil-window-move-far-right)
+   ("wd"  . delete-window)
+   ("wh"  . evil-window-left)
+   ("wj"  . evil-window-down)
+   ("wk"  . evil-window-up)
+   ("wl"  . evil-window-right)
+   ("wm"  . delete-other-windows)
+   ("ws"  . split-window-below)
+   ("wv"  . split-window-right))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package which-key
+    :diminish which-key-mode
+    :config
+    (which-key-declare-prefixes
+      "SPC b" "buffer"
+      "SPC f" "file"
+      "SPC g" "git"
+      "SPC p" "project"
+      "SPC q" "quit"
+      "SPC t" "toggle"
+      "SPC w" "window")
+    (which-key-mode +1))
+#+end_src
+
+** ui
+
+#+begin_src emacs-lisp
+  (blink-cursor-mode -1)
+  (menu-bar-mode -1)
+  (scroll-bar-mode -1)
+  (tool-bar-mode -1)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package spaceline
+    :pin melpa
+    :init
+    (setq powerline-default-separator 'bar)
+    (setq spaceline-highlight-face-func #'spaceline-highlight-face-evil-state)
+    :config
+    (require 'spaceline-config)
+    (spaceline-emacs-theme))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package zenburn-theme
+    :config
+    (load-theme 'zenburn t)
+    ;; Override the original setting in zenburn.
+    (setq fci-rule-color "#D0BF8F"))
+#+end_src
+
+** initial screen
+
+#+begin_src emacs-lisp
+  (setq inhibit-splash-screen t)
+#+end_src
+
+** dired-x
+
+#+begin_src emacs-lisp
+  (require 'dired-x) ; `dired-jump'
+#+end_src
+
+** yes-or-no
+
+#+begin_src emacs-lisp
+  (defalias 'yes-or-no-p 'y-or-n-p)
+#+end_src
+
+** functions
+#+begin_src emacs-lisp
 (defun core-find-emacs-help ()
   (interactive)
   (find-file-other-window (concat user-emacs-directory "README.md")))
-
-(setq auto-save-file-name-transforms `((".*" ,core-temporary-directory t)))
-
-(setq auto-save-list-file-prefix (concat core-temporary-directory ".saves-"))
-
-(setq backup-directory-alist `((".*" . ,core-temporary-directory)))
-
-(setq bookmark-default-file (concat core-cache-directory "bookmarks"))
-
-(setq custom-file (concat core-cache-directory "custom.el"))
-
-(setq scroll-conservatively 101)
-
-(setq visible-bell t)
-
-(setq-default indent-tabs-mode nil)
-
-(electric-pair-mode +1)
-
-(show-paren-mode +1)
-
-(add-hook 'prog-mode-hook #'core-prog-mode-config)
-
-(evil-set-initial-state 'package-menu-mode 'motion)
-
-(load custom-file t)
-
-(make-directory core-cache-directory t)
-
-(bind-keys
- :map universal-argument-map
- ("SPC u" . universal-argument-more)
- :map core-global-map
- ("!"   . shell-command)
- ("SPC" . execute-extended-command)
- ("bb"  . switch-to-buffer)
- ("bd"  . kill-this-buffer)
- ("bl"  . buffer-menu)
- ("bo"  . mode-line-other-buffer)
- ("ff"  . find-file)
- ("fh"  . core-find-emacs-help)
- ("fi"  . imenu)
- ("fj"  . dired-jump)
- ("fs"  . save-buffer)
- ("qe"  . save-buffers-kill-emacs)
- ("qq"  . save-buffers-kill-terminal)
- ("u"   . universal-argument))
 #+end_src
 
-
-** Editing
-
+** settings
 #+begin_src emacs-lisp
-(use-package ace-link
-  :config
-  (ace-link-setup-default))
-
-(use-package company
-  :defer t
-  :init
-  (add-hook 'prog-mode-hook #'company-mode)
-  :config
-  (define-key company-active-map (kbd "M-n") nil)
-  (define-key company-active-map (kbd "M-p") nil)
-  (define-key company-active-map (kbd "C-n") #'company-select-next)
-  (define-key company-active-map (kbd "C-p") #'company-select-previous)
-  (make-variable-buffer-local 'company-backends))
-
-(use-package counsel
-  :demand t
-  :diminish counsel-mode
-  :bind (:map core-global-map
-         ("s" . counsel-ag))
-  :config
-  (counsel-mode +1))
-
-(use-package eshell
-  :defer t
-  :init
+  (setq auto-save-file-name-transforms `((".*" ,core-temporary-directory t)))
+  (setq auto-save-list-file-prefix (concat core-temporary-directory ".saves-"))
+  (setq backup-directory-alist `((".*" . ,core-temporary-directory)))
+  (setq bookmark-default-file (concat core-cache-directory "bookmarks"))
   (setq eshell-cmpl-ignore-case t)
-  (setq eshell-directory-name (concat core-cache-directory "eshell/")))
-
-;; Get environment variables from the shell
-(use-package exec-path-from-shell
-  :if (memq window-system '(mac ns))
-  :config
-  (exec-path-from-shell-initialize))
-
-(use-package evil-matchit
-  :config
-  (global-evil-matchit-mode +1))
-
-(use-package evil-surround
-  :config
-  (global-evil-surround-mode +1))
-
-(use-package fill-column-indicator
-  :bind (:map core-global-map
-         ("tf" . fci-mode)))
-
-(use-package hl-todo
-  :defer t
-  :init
-  (add-hook 'prog-mode-hook #'hl-todo-mode))
-
-(use-package hydra)
-
-(use-package ivy
-  :demand t
-  :diminish ivy-mode
-  :bind (:map core-global-map
-         ("r" . ivy-resume))
-  :init
-  (setq ivy-count-format "(%d/%d) ")
-  (setq ivy-use-virtual-buffers t)
-  :config
-  (ivy-mode +1))
-
-(use-package ivy-hydra)
-
-(use-package linum
-  :bind (:map core-global-map
-         ("tn" . linum-mode))
-  :init
-  (setq linum-format "%d ")
-  (add-hook 'prog-mode-hook #'linum-mode))
-
-(use-package magit
-  :diminish auto-revert-mode
-  :bind (:map core-global-map
-         ("gb" . magit-blame)
-         ("gd" . magit-diff-popup)
-         ("gf" . magit-file-popup)
-         ("gl" . magit-log-popup)
-         ("gs" . magit-status)))
-
-(use-package evil-magit)
-
-(use-package markdown-mode
-  :defer t)
-
-(use-package projectile
-  :pin melpa
-  :demand t
-  :diminish projectile-mode
-  :bind (:map core-global-map
-         ("pa" . projectile-find-other-file)
-         ("pb" . projectile-switch-to-buffer)
-         ("pc" . projectile-compile-project)
-         ("pd" . projectile-find-dir)
-         ("pe" . projectile-run-eshell)
-         ("pf" . projectile-find-file)
-         ("ph" . projectile-dired)
-         ("pk" . projectile-kill-buffers)
-         ("po" . projectile-project-buffers-other-buffer)
-         ("pp" . projectile-switch-project))
-  :init
-  (setq projectile-cache-file (concat core-cache-directory "projectile.cache"))
-  (setq projectile-known-projects-file (concat core-cache-directory "projectile-bookmarks.eld"))
-  (setq projectile-completion-system 'ivy)
-  (setq projectile-switch-project-action 'projectile-dired)
-  :config
-  (projectile-global-mode +1))
-
-(use-package counsel-projectile
-  :bind (:map core-global-map
-         ("ps" . counsel-projectile-ag))
-  :init
-  (counsel-projectile-on))
-
-(use-package rainbow-delimiters
-  :defer t
-  :init
-  (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
-
-(use-package recentf
-  :defer t
-  :init
-  (setq recentf-save-file (concat core-cache-directory "recentf")))
-
-(use-package spaceline
-  :pin melpa
-  :init
-  (setq powerline-default-separator 'bar)
-  (setq spaceline-highlight-face-func #'spaceline-highlight-face-evil-state)
-  :config
-  (require 'spaceline-config)
-  (spaceline-emacs-theme))
-
-(use-package swiper
-  :bind ("C-s" . swiper))
-
-(use-package undo-tree
-  :pin gnu
-  :diminish undo-tree-mode
-  :init
-  (setq undo-tree-auto-save-history t)
-  (setq undo-tree-history-directory-alist `((".*" . ,core-temporary-directory)))
-  :config
-  (global-undo-tree-mode +1))
-
-(use-package which-key
-  :diminish which-key-mode
-  :config
-  (which-key-declare-prefixes
-    "SPC b" "buffer"
-    "SPC f" "file"
-    "SPC g" "git"
-    "SPC p" "project"
-    "SPC t" "toggle"
-    "SPC w" "window")
-  (which-key-mode +1))
-
-(use-package whitespace
-  :diminish whitespace-mode
-  :bind (:map core-global-map
-         ("tw" . whitespace-mode))
-  :init
-  (setq whitespace-style '(face trailing empty))
-  (add-hook 'prog-mode-hook #'whitespace-mode))
-
-(use-package zenburn-theme
-  :config
-  (load-theme 'zenburn t)
-  ;; Override the original setting in zenburn.
-  (setq fci-rule-color "#D0BF8F"))
+  (setq eshell-directory-name (concat core-cache-directory "eshell/"))
+  (setq recentf-save-file (concat core-cache-directory "recentf"))
 #+end_src
 
-
-** Hydra
+** custom
 
 #+begin_src emacs-lisp
-(defun core-move-splitter-left (arg)
-  "Move window splitter left."
-  (interactive "p")
-  (if (let ((windmove-wrap-around))
-        (windmove-find-other-window 'right))
-      (shrink-window-horizontally arg)
-    (enlarge-window-horizontally arg)))
-
-(defun core-move-splitter-right (arg)
-  "Move window splitter right."
-  (interactive "p")
-  (if (let ((windmove-wrap-around))
-        (windmove-find-other-window 'right))
-      (enlarge-window-horizontally arg)
-    (shrink-window-horizontally arg)))
-
-(defun core-move-splitter-up (arg)
-  "Move window splitter up."
-  (interactive "p")
-  (if (let ((windmove-wrap-around))
-        (windmove-find-other-window 'up))
-      (enlarge-window arg)
-    (shrink-window arg)))
-
-(defun core-move-splitter-down (arg)
-  "Move window splitter down."
-  (interactive "p")
-  (if (let ((windmove-wrap-around))
-        (windmove-find-other-window 'up))
-      (shrink-window arg)
-    (enlarge-window arg)))
-
-(defhydra core-move-splitter ()
-  "splitter"
-  ("h" core-move-splitter-left)
-  ("j" core-move-splitter-down)
-  ("k" core-move-splitter-up)
-  ("l" core-move-splitter-right)
-  ("q" nil "quit"))
+  (setq custom-file (concat core-cache-directory "custom.el"))
+  (load custom-file t)
 #+end_src
 
-
-** Windows
+** scroll
 
 #+begin_src emacs-lisp
-(use-package ace-window
-  :bind (:map core-global-map
-         ("wo" . aw-flip-window)
-         ("ww" . ace-window))
-  :init
-  (setq aw-scope 'frame))
-
-(use-package window-purpose
-  :diminish purpose-mode
-  :init
-  (setq purpose-user-mode-purposes '((cmake-mode . edit)
-                                     (magit-mode . search)))
-  (setq purpose-user-name-purposes '(("README.md" . readme)))
-  :config
-  (purpose-compile-user-configuration)
-  (purpose-mode +1))
-
-(use-package winner
-  :bind
-  (:map core-global-map
-   ("wr" . winner-redo)
-   ("wu" . winner-undo))
-  :init
-  (winner-mode +1))
-
-(bind-keys
- :map core-global-map
- ("w." . core-move-splitter/body)
- ("w=" . balance-windows)
- ("wd" . delete-window)
- ("wm" . delete-other-windows)
- ("ws" . split-window-below)
- ("wv" . split-window-right)
- ;; ("ww" . other-window)
- ("wH" . evil-window-move-far-left)
- ("wJ" . evil-window-move-very-bottom)
- ("wK" . evil-window-move-very-top)
- ("wL" . evil-window-move-far-right)
- ("wh" . evil-window-left)
- ("wj" . evil-window-down)
- ("wk" . evil-window-up)
- ("wl" . evil-window-right))
+  (setq scroll-conservatively 101)
 #+end_src
 
-
-** Programming
-
-*** C++
+** visible-bell
 
 #+begin_src emacs-lisp
-(bind-map core-c++-mode-map
-  :evil-keys (",")
-  :major-modes (c++-mode))
-
-(defun core-c++-config ()
-  (c-set-style "linux")
-  (c-set-offset 'inher-intro 0)
-  (c-set-offset 'inline-open 0)
-  (c-set-offset 'innamespace 0)
-  (c-set-offset 'member-init-intro 0)
-  (setq c-basic-offset 2)
-  (setq indent-tabs-mode t)
-  (setq tab-width 2))
-
-(defun core-c++-company-config ()
-  (setq company-backends '(company-rtags
-                           (company-dabbrev-code company-keywords)
-                           company-files
-                           company-dabbrev)))
-
-(use-package cc-mode
-  :defer t
-  :init
-  (add-hook 'c-mode-common-hook #'core-c++-config)
-  (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode)))
-
-(use-package cmake-mode
-  :defer t)
-
-(use-package rtags
-  :bind (:map core-c++-mode-map
-         ("gb" . rtags-location-stack-back)
-         ("gg" . rtags-find-symbol-at-point)
-         ("gu" . rtags-find-references-at-point)
-         ("gv" . rtags-find-virtuals-at-point))
-  :init
-  (defalias 'caadr 'cl-caadr)
-  (setq rtags-completions-enabled t)
-  (setq rtags-display-result-backend 'ivy))
-
-(use-package company-rtags
-  :defer t
-  :init
-  (add-hook 'c-mode-common-hook #'core-c++-company-config))
-
-(use-package ivy-rtags
-  :defer t)
-
-(use-package smart-tabs-mode
-  :config
-  (smart-tabs-insinuate 'c 'c++))
+  (setq visible-bell t)
 #+end_src
 
-*** Clojure
+** indent
 
 #+begin_src emacs-lisp
-(bind-map core-clojure-cider-map
-  :evil-keys (",")
-  :major-modes (cider-repl-mode))
-
-(bind-map core-clojure-mode-map
-  :evil-keys (",")
-  :major-modes (clojure-mode))
-
-(defun core-clojure-config ()
-  (modify-syntax-entry ?- "w"))
-
-(defun core-clojure-eval-last-sexp ()
-  (interactive)
-  (evil-append 1)
-  (condition-case err
-      (cider-eval-last-sexp)
-    (error (message (error-message-string err))))
-  (evil-normal-state))
-
-(use-package cider
-  :bind (:map core-clojure-cider-map
-         ("ss" . cider-switch-to-last-clojure-buffer)
-         :map core-clojure-mode-map
-         ("eb" . cider-eval-buffer)
-         ("ee" . core-clojure-eval-last-sexp)
-         ("ef" . cider-eval-defun-at-point)
-         ("gb" . cider-pop-back)
-         ("gg" . cider-find-var)
-         ("ss" . cider-switch-to-repl-buffer))
-  :init
-  (add-hook 'cider-repl-mode-hook #'company-mode)
-  (evil-set-initial-state 'cider-stacktrace-mode 'emacs))
-
-(use-package clojure-mode
-  :defer t
-  :init
-  (setq cider-prompt-for-symbol nil)
-  (add-hook 'clojure-mode-hook #'core-clojure-config))
+  (setq-default indent-tabs-mode nil)
 #+end_src
 
-*** Emacs Lisp
+** paren
 
 #+begin_src emacs-lisp
-(bind-map core-emacs-lisp-map
-  :evil-keys (",")
-  :major-modes (emacs-lisp-mode lisp-interaction-mode))
-
-(bind-keys
- :map core-emacs-lisp-map
- ("eb" . eval-buffer)
- ("ee" . eval-last-sexp)
- ("ef" . eval-defun)
- ("gb" . xref-pop-marker-stack)
- ("gg" . xref-find-definitions)
- ("gu" . xref-find-references))
-
-(defun core-emacs-lisp-config ()
-  (modify-syntax-entry ?- "w"))
-
-(add-hook 'emacs-lisp-mode-hook #'core-emacs-lisp-config)
+  (electric-pair-mode +1)
+  (show-paren-mode +1)
 #+end_src
 
-*** Go
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :defer t
+    :init
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+#+end_src
+
+** ace-link
+
+#+begin_src emacs-lisp
+  (use-package ace-link
+    :config
+    (ace-link-setup-default))
+#+end_src
+
+** company
+
+#+begin_src emacs-lisp
+  (use-package company
+    :defer t
+    :init
+    (add-hook 'prog-mode-hook #'company-mode)
+    :config
+    (define-key company-active-map (kbd "M-n") nil)
+    (define-key company-active-map (kbd "M-p") nil)
+    (define-key company-active-map (kbd "C-n") #'company-select-next)
+    (define-key company-active-map (kbd "C-p") #'company-select-previous)
+    (make-variable-buffer-local 'company-backends))
+#+end_src
+
+** counsel
+
+#+begin_src emacs-lisp
+  (use-package counsel
+    :demand t
+    :diminish counsel-mode
+    :bind (:map core-global-map
+           ("s" . counsel-ag))
+    :config
+    (counsel-mode +1))
+#+end_src
+
+** env
+
+Get environment variables from the shell.
+
+#+begin_src emacs-lisp
+  (use-package exec-path-from-shell
+    :if (memq window-system '(mac ns))
+    :config
+    (exec-path-from-shell-initialize))
+#+end_src
+
+** fill-column-indicator
+
+#+begin_src emacs-lisp
+  (use-package fill-column-indicator
+    :bind (:map core-global-map
+           ("tf" . fci-mode)))
+#+end_src
+
+** hl-todo
+
+#+begin_src emacs-lisp
+  (use-package hl-todo
+    :defer t
+    :init
+    (add-hook 'prog-mode-hook #'hl-todo-mode))
+#+end_src
+
+** hydra
+
+#+begin_src emacs-lisp
+  (defun core-move-splitter-left (arg)
+    "Move window splitter left."
+    (interactive "p")
+    (if (let ((windmove-wrap-around))
+          (windmove-find-other-window 'right))
+        (shrink-window-horizontally arg)
+      (enlarge-window-horizontally arg)))
+
+  (defun core-move-splitter-right (arg)
+    "Move window splitter right."
+    (interactive "p")
+    (if (let ((windmove-wrap-around))
+          (windmove-find-other-window 'right))
+        (enlarge-window-horizontally arg)
+      (shrink-window-horizontally arg)))
+
+  (defun core-move-splitter-up (arg)
+    "Move window splitter up."
+    (interactive "p")
+    (if (let ((windmove-wrap-around))
+          (windmove-find-other-window 'up))
+        (enlarge-window arg)
+      (shrink-window arg)))
+
+  (defun core-move-splitter-down (arg)
+    "Move window splitter down."
+    (interactive "p")
+    (if (let ((windmove-wrap-around))
+          (windmove-find-other-window 'up))
+        (shrink-window arg)
+      (enlarge-window arg)))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package hydra)
+
+  (defhydra core-move-splitter ()
+    "splitter"
+    ("h" core-move-splitter-left)
+    ("j" core-move-splitter-down)
+    ("k" core-move-splitter-up)
+    ("l" core-move-splitter-right)
+    ("q" nil "quit"))
+#+end_src
+
+** ivy
+
+#+begin_src emacs-lisp
+  (use-package ivy
+    :demand t
+    :diminish ivy-mode
+    :bind (:map core-global-map
+           ("r" . ivy-resume))
+    :init
+    (setq ivy-count-format "(%d/%d) ")
+    (setq ivy-use-virtual-buffers t)
+    :config
+    (ivy-mode +1))
+
+  (use-package ivy-hydra)
+#+end_src
+
+** linum
+
+#+begin_src emacs-lisp
+  (use-package linum
+    :bind (:map core-global-map
+           ("tn" . linum-mode))
+    :init
+    (setq linum-format "%d ")
+    (add-hook 'prog-mode-hook #'linum-mode))
+#+end_src
+
+** magit
+
+#+begin_src emacs-lisp
+  (use-package magit
+    :diminish auto-revert-mode
+    :bind (:map core-global-map
+           ("gb" . magit-blame)
+           ("gd" . magit-diff-popup)
+           ("gf" . magit-file-popup)
+           ("gl" . magit-log-popup)
+           ("gs" . magit-status)))
+
+  (use-package evil-magit)
+#+end_src
+
+** projectile
+
+#+begin_src emacs-lisp
+  (use-package projectile
+    :pin melpa
+    :demand t
+    :diminish projectile-mode
+    :bind (:map core-global-map
+           ("pa" . projectile-find-other-file)
+           ("pb" . projectile-switch-to-buffer)
+           ("pc" . projectile-compile-project)
+           ("pd" . projectile-find-dir)
+           ("pe" . projectile-run-eshell)
+           ("pf" . projectile-find-file)
+           ("ph" . projectile-dired)
+           ("pk" . projectile-kill-buffers)
+           ("po" . projectile-project-buffers-other-buffer)
+           ("pp" . projectile-switch-project))
+    :init
+    (setq projectile-cache-file (concat core-cache-directory "projectile.cache"))
+    (setq projectile-known-projects-file (concat core-cache-directory "projectile-bookmarks.eld"))
+    (setq projectile-completion-system 'ivy)
+    (setq projectile-switch-project-action 'projectile-dired)
+    :config
+    (projectile-global-mode +1))
+
+  (use-package counsel-projectile
+    :bind (:map core-global-map
+           ("ps" . counsel-projectile-ag))
+    :init
+    (counsel-projectile-on))
+#+end_src
+
+** swiper
+
+#+begin_src emacs-lisp
+  (use-package swiper
+    :bind ("C-s" . swiper))
+#+end_src
+
+** undo-tree
+
+#+begin_src emacs-lisp
+  (use-package undo-tree
+    :pin gnu
+    :diminish undo-tree-mode
+    :init
+    (setq undo-tree-auto-save-history t)
+    (setq undo-tree-history-directory-alist `((".*" . ,core-temporary-directory)))
+    :config
+    (global-undo-tree-mode +1))
+#+end_src
+
+** whitespace
+
+#+begin_src emacs-lisp
+  (use-package whitespace
+    :diminish whitespace-mode
+    :bind (:map core-global-map
+           ("tw" . whitespace-mode))
+    :init
+    (setq whitespace-style '(face trailing empty))
+    (add-hook 'prog-mode-hook #'whitespace-mode))
+#+end_src
+
+** ace-window
+
+#+begin_src emacs-lisp
+  (use-package ace-window
+    :bind (:map core-global-map
+           ("wo" . aw-flip-window)
+           ("ww" . ace-window))
+    :init
+    (setq aw-scope 'frame))
+#+end_src
+
+** window-purpose
+
+#+begin_src emacs-lisp
+  (use-package window-purpose
+    :diminish purpose-mode
+    :init
+    (setq purpose-user-mode-purposes '((cmake-mode . edit)
+                                       (magit-mode . search)))
+    (setq purpose-user-name-purposes '(("README.md" . readme)))
+    :config
+    (purpose-compile-user-configuration)
+    (purpose-mode +1))
+#+end_src
+
+** winner
+
+#+begin_src emacs-lisp
+  (use-package winner
+    :bind
+    (:map core-global-map
+     ("wr" . winner-redo)
+     ("wu" . winner-undo))
+    :init
+    (winner-mode +1))
+#+end_src
+
+** programming
+
+#+begin_src emacs-lisp
+  (defun core-prog-mode-config ()
+    (modify-syntax-entry ?_ "w"))
+
+  (add-hook 'prog-mode-hook #'core-prog-mode-config)
+#+end_src
+
+*** c++
+
+#+begin_src emacs-lisp
+  (bind-map core-c++-mode-map
+    :evil-keys (",")
+    :major-modes (c++-mode))
+
+  (defun core-c++-config ()
+    (c-set-style "linux")
+    (c-set-offset 'inher-intro 0)
+    (c-set-offset 'inline-open 0)
+    (c-set-offset 'innamespace 0)
+    (c-set-offset 'member-init-intro 0)
+    (setq c-basic-offset 2)
+    (setq indent-tabs-mode t)
+    (setq tab-width 2))
+
+  (defun core-c++-company-config ()
+    (setq company-backends '(company-rtags
+                             (company-dabbrev-code company-keywords)
+                             company-files
+                             company-dabbrev)))
+
+  (use-package cc-mode
+    :defer t
+    :init
+    (add-hook 'c-mode-common-hook #'core-c++-config)
+    (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode)))
+
+  (use-package cmake-mode
+    :defer t)
+
+  (use-package rtags
+    :bind (:map core-c++-mode-map
+           ("gb" . rtags-location-stack-back)
+           ("gg" . rtags-find-symbol-at-point)
+           ("gu" . rtags-find-references-at-point)
+           ("gv" . rtags-find-virtuals-at-point))
+    :init
+    (defalias 'caadr 'cl-caadr)
+    (setq rtags-completions-enabled t)
+    (setq rtags-display-result-backend 'ivy))
+
+  (use-package company-rtags
+    :defer t
+    :init
+    (add-hook 'c-mode-common-hook #'core-c++-company-config))
+
+  (use-package ivy-rtags
+    :defer t)
+
+  (use-package smart-tabs-mode
+    :config
+    (smart-tabs-insinuate 'c 'c++))
+#+end_src
+
+*** clojure
+
+#+begin_src emacs-lisp
+  (bind-map core-clojure-cider-map
+    :evil-keys (",")
+    :major-modes (cider-repl-mode))
+
+  (bind-map core-clojure-mode-map
+    :evil-keys (",")
+    :major-modes (clojure-mode))
+
+  (defun core-clojure-config ()
+    (modify-syntax-entry ?- "w"))
+
+  (defun core-clojure-eval-last-sexp ()
+    (interactive)
+    (evil-append 1)
+    (condition-case err
+        (cider-eval-last-sexp)
+      (error (message (error-message-string err))))
+    (evil-normal-state))
+
+  (use-package cider
+    :bind (:map core-clojure-cider-map
+           ("ss" . cider-switch-to-last-clojure-buffer)
+           :map core-clojure-mode-map
+           ("eb" . cider-eval-buffer)
+           ("ee" . core-clojure-eval-last-sexp)
+           ("ef" . cider-eval-defun-at-point)
+           ("gb" . cider-pop-back)
+           ("gg" . cider-find-var)
+           ("ss" . cider-switch-to-repl-buffer))
+    :init
+    (add-hook 'cider-repl-mode-hook #'company-mode)
+    (evil-set-initial-state 'cider-stacktrace-mode 'emacs))
+
+  (use-package clojure-mode
+    :defer t
+    :init
+    (setq cider-prompt-for-symbol nil)
+    (add-hook 'clojure-mode-hook #'core-clojure-config))
+#+end_src
+
+*** emacs-lisp
+
+#+begin_src emacs-lisp
+  (bind-map core-emacs-lisp-map
+    :evil-keys (",")
+    :major-modes (emacs-lisp-mode lisp-interaction-mode))
+
+  (bind-keys
+   :map core-emacs-lisp-map
+   ("eb" . eval-buffer)
+   ("ee" . eval-last-sexp)
+   ("ef" . eval-defun)
+   ("gb" . xref-pop-marker-stack)
+   ("gg" . xref-find-definitions)
+   ("gu" . xref-find-references))
+
+  (defun core-emacs-lisp-config ()
+    (modify-syntax-entry ?- "w"))
+
+  (add-hook 'emacs-lisp-mode-hook #'core-emacs-lisp-config)
+#+end_src
+
+*** go
 
 - github.com/nsf/gocode
 - github.com/rogpeppe/godef
 - golang.org/x/tools/cmd/goimports
 
 #+begin_src emacs-lisp
-(bind-map core-go-mode-map
-  :evil-keys (",")
-  :major-modes (go-mode))
+  (bind-map core-go-mode-map
+    :evil-keys (",")
+    :major-modes (go-mode))
 
-(defun core-go-company-config ()
-  (add-to-list 'company-backends #'company-go))
+  (defun core-go-company-config ()
+    (add-to-list 'company-backends #'company-go))
 
-(defun core-go-config ()
-  ;; NOTE: the last arguemnt being `t' means only the buffer-local
-  ;; value of the hook variable is modified.
-  (add-hook 'before-save-hook #'gofmt-before-save nil t))
+  (defun core-go-config ()
+    ;; NOTE: the last arguemnt being `t' means only the buffer-local
+    ;; value of the hook variable is modified.
+    (add-hook 'before-save-hook #'gofmt-before-save nil t))
 
-(use-package company-go
-  :defer t
-  :init
-  (setq company-go-show-annotation t)
-  (add-hook 'go-mode-hook #'core-go-company-config))
+  (use-package company-go
+    :defer t
+    :init
+    (setq company-go-show-annotation t)
+    (add-hook 'go-mode-hook #'core-go-company-config))
 
-(use-package go-eldoc
-  :defer t
-  :init
-  (add-hook 'go-mode-hook #'go-eldoc-setup))
+  (use-package go-eldoc
+    :defer t
+    :init
+    (add-hook 'go-mode-hook #'go-eldoc-setup))
 
-(use-package go-mode
-  :bind (:map core-go-mode-map
-         ("gb" . xref-pop-marker-stack)
-         ("gg" . godef-jump))
-  :init
-  (setq gofmt-command "goimports")
-  (add-hook 'go-mode-hook #'core-go-config))
+  (use-package go-mode
+    :bind (:map core-go-mode-map
+           ("gb" . xref-pop-marker-stack)
+           ("gg" . godef-jump))
+    :init
+    (setq gofmt-command "goimports")
+    (add-hook 'go-mode-hook #'core-go-config))
 #+end_src
 
-*** Python
+*** markdown
 
 #+begin_src emacs-lisp
-(bind-map core-python-mode-map
-  :evil-keys (",")
-  :major-modes (python-mode))
-
-(defun core-python-company-config ()
-  (add-to-list 'company-backends #'company-anaconda))
-
-(use-package anaconda-mode
-  :bind (:map core-python-mode-map
-         ("gb" . anaconda-mode-go-back)
-         ("gg" . anaconda-mode-find-definitions)
-         ("gu" . anaconda-mode-find-references))
-  :init
-  (setq anaconda-mode-installation-directory
-        (concat core-cache-directory "anaconda-mode/"))
-  (add-hook 'python-mode-hook #'anaconda-mode))
-
-(use-package company-anaconda
-  :defer t
-  :init
-  (add-hook 'anaconda-mode-hook #'core-python-company-config))
+  (use-package markdown-mode
+    :defer t)
 #+end_src
 
-*** Rust
+*** python
 
 #+begin_src emacs-lisp
-(bind-map core-rust-mode-map
-  :evil-keys (",")
-  :major-modes (rust-mode))
+  (bind-map core-python-mode-map
+    :evil-keys (",")
+    :major-modes (python-mode))
 
-(use-package racer
-  :bind (:map core-rust-mode-map
-         ("fb" . rust-format-buffer)
-         ("hh" . racer-describe)
-         ("gg" . racer-find-definition))
-  :init
-  (setq racer-rust-src-path
-        (concat (substring (shell-command-to-string "rustc --print sysroot") 0 -1)
-                "/lib/rustlib/src/rust/src"))
-  (add-hook 'rust-mode-hook #'racer-mode)
-  (evil-set-initial-state 'racer-help-mode 'motion))
+  (defun core-python-company-config ()
+    (add-to-list 'company-backends #'company-anaconda))
 
-(use-package rust-mode
-  :defer t)
+  (use-package anaconda-mode
+    :bind (:map core-python-mode-map
+           ("gb" . anaconda-mode-go-back)
+           ("gg" . anaconda-mode-find-definitions)
+           ("gu" . anaconda-mode-find-references))
+    :init
+    (setq anaconda-mode-installation-directory
+          (concat core-cache-directory "anaconda-mode/"))
+    (add-hook 'python-mode-hook #'anaconda-mode))
+
+  (use-package company-anaconda
+    :defer t
+    :init
+    (add-hook 'anaconda-mode-hook #'core-python-company-config))
+#+end_src
+
+*** rust
+
+#+begin_src emacs-lisp
+  (bind-map core-rust-mode-map
+    :evil-keys (",")
+    :major-modes (rust-mode))
+
+  (use-package racer
+    :bind (:map core-rust-mode-map
+           ("fb" . rust-format-buffer)
+           ("hh" . racer-describe)
+           ("gg" . racer-find-definition))
+    :init
+    (setq racer-rust-src-path
+          (concat (substring (shell-command-to-string "rustc --print sysroot") 0 -1)
+                  "/lib/rustlib/src/rust/src"))
+    (add-hook 'rust-mode-hook #'racer-mode)
+    (evil-set-initial-state 'racer-help-mode 'motion))
+
+  (use-package rust-mode
+    :defer t)
 #+end_src
