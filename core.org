@@ -474,9 +474,7 @@ Highlight text representing color codes.
   (use-package rainbow-mode
     :diminish rainbow-mode
     :bind (:map core-global-map
-           ("tr" . rainbow-mode))
-    :init
-    (add-hook 'prog-mode-hook 'rainbow-mode))
+           ("tr" . rainbow-mode)))
 #+end_src
 
 Highlight parens according to their depth.
