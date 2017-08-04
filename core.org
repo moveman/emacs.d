@@ -1,8 +1,76 @@
-* Configurations
+* Features
 :properties:
 :header-args:emacs-lisp: :tangle yes
 :end:
-** storage
+** prelude
+
+package.
+
+#+begin_src emacs-lisp
+  (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
+                           ("melpa" . "http://melpa.org/packages/")
+                           ("melpa-s" . "http://stable.melpa.org/packages/")))
+
+  (setq package-archive-priorities '(("gnu" . 10)
+                                     ("melpa" . 15)
+                                     ("melpa-s" . 20)))
+
+  (unless (file-exists-p package-user-dir)
+    (package-refresh-contents)
+    (package-install 'use-package))
+
+  (setq use-package-always-ensure t)
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package hydra)
+
+  (defun core-find-emacs-help ()
+    (interactive)
+    (find-file-other-window (concat user-emacs-directory "README.md")))
+
+  (defun core-move-splitter-left (arg)
+    "Move window splitter left."
+    (interactive "p")
+    (if (let ((windmove-wrap-around))
+          (windmove-find-other-window 'right))
+        (shrink-window-horizontally arg)
+      (enlarge-window-horizontally arg)))
+
+  (defun core-move-splitter-right (arg)
+    "Move window splitter right."
+    (interactive "p")
+    (if (let ((windmove-wrap-around))
+          (windmove-find-other-window 'right))
+        (enlarge-window-horizontally arg)
+      (shrink-window-horizontally arg)))
+
+  (defun core-move-splitter-up (arg)
+    "Move window splitter up."
+    (interactive "p")
+    (if (let ((windmove-wrap-around))
+          (windmove-find-other-window 'up))
+        (enlarge-window arg)
+      (shrink-window arg)))
+
+  (defun core-move-splitter-down (arg)
+    "Move window splitter down."
+    (interactive "p")
+    (if (let ((windmove-wrap-around))
+          (windmove-find-other-window 'up))
+        (shrink-window arg)
+      (enlarge-window arg)))
+
+  (defhydra core-move-splitter ()
+    "splitter"
+    ("h" core-move-splitter-left)
+    ("j" core-move-splitter-down)
+    ("k" core-move-splitter-up)
+    ("l" core-move-splitter-right)
+    ("q" nil "quit"))
+#+end_src
+
+storage.
 
 #+begin_src emacs-lisp
   (defconst core-cache-directory
@@ -16,26 +84,36 @@
     (format "%s%s%s/" temporary-file-directory "emacs" (user-uid)))
 #+end_src
 
-** package
+settings.
 
 #+begin_src emacs-lisp
-  (setq package-archives '(("gnu" . "http://elpa.gnu.org/packages/")
-                           ("melpa" . "http://melpa.org/packages/")
-                           ("melpa-s" . "http://stable.melpa.org/packages/")))
+  (defalias 'yes-or-no-p 'y-or-n-p)
 
-  (setq package-archive-priorities '(("gnu" . 10)
-                                     ("melpa" . 15)
-                                     ("melpa-s" . 20)))
+  (electric-pair-mode +1)
+
+  (show-paren-mode +1)
+
+  (setq auto-save-file-name-transforms `((".*" ,core-temporary-directory t)))
+  (setq auto-save-list-file-prefix (concat core-temporary-directory ".saves-"))
+  (setq backup-directory-alist `((".*" . ,core-temporary-directory)))
+  (setq bookmark-default-file (concat core-cache-directory "bookmarks"))
+  (setq eshell-cmpl-ignore-case t)
+  (setq eshell-directory-name (concat core-cache-directory "eshell/"))
+  (setq inhibit-splash-screen t)
+  (setq initial-scratch-message "")
+  (setq recentf-save-file (concat core-cache-directory "recentf"))
+  (setq ring-bell-function 'ignore)
+  (setq scroll-conservatively 101)
+  (setq scroll-preserve-screen-position t)
+
+  (setq-default indent-tabs-mode nil)
 #+end_src
 
-** use-package
+custom.
 
 #+begin_src emacs-lisp
-  (unless (file-exists-p package-user-dir)
-    (package-refresh-contents)
-    (package-install 'use-package))
-
-  (setq use-package-always-ensure t)
+  (setq custom-file (concat core-cache-directory "custom.el"))
+  (load custom-file t)
 #+end_src
 
 ** evil
@@ -87,7 +165,9 @@
   (evil-set-initial-state 'package-menu-mode 'motion)
 #+end_src
 
-** bind-map
+** keys
+
+bind-map.
 
 #+begin_src emacs-lisp
   (use-package bind-map)
@@ -98,7 +178,7 @@
     :override-minor-modes t)
 #+end_src
 
-** bind-key
+bind-key.
 
 #+begin_src emacs-lisp
   (use-package bind-key)
@@ -137,6 +217,8 @@
    ("wv"  . split-window-right))
 #+end_src
 
+which key.
+
 #+begin_src emacs-lisp
   (use-package which-key
     :diminish which-key-mode
@@ -152,100 +234,9 @@
     (which-key-mode +1))
 #+end_src
 
-** ui
+** edit
 
-#+begin_src emacs-lisp
-  (blink-cursor-mode -1)
-
-  (menu-bar-mode -1)
-
-  (scroll-bar-mode -1)
-
-  (tool-bar-mode -1)
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package spaceline
-    :pin melpa
-    :init
-    (setq powerline-default-separator 'bar)
-    (setq spaceline-highlight-face-func #'spaceline-highlight-face-evil-state)
-    :config
-    (require 'spaceline-config)
-    (spaceline-emacs-theme))
-#+end_src
-
-Revert ~fci-rule-color~ to its original value.
-
-#+begin_src emacs-lisp
-  (use-package zenburn-theme
-    :config
-    (load-theme 'zenburn t)
-    (setq fci-rule-color "#cccccc"))
-#+end_src
-
-** yes-or-no
-
-#+begin_src emacs-lisp
-  (defalias 'yes-or-no-p 'y-or-n-p)
-#+end_src
-
-** functions
-#+begin_src emacs-lisp
-(defun core-find-emacs-help ()
-  (interactive)
-  (find-file-other-window (concat user-emacs-directory "README.md")))
-#+end_src
-
-** settings
-
-#+begin_src emacs-lisp
-  (setq auto-save-file-name-transforms `((".*" ,core-temporary-directory t)))
-  (setq auto-save-list-file-prefix (concat core-temporary-directory ".saves-"))
-  (setq backup-directory-alist `((".*" . ,core-temporary-directory)))
-  (setq bookmark-default-file (concat core-cache-directory "bookmarks"))
-  (setq eshell-cmpl-ignore-case t)
-  (setq eshell-directory-name (concat core-cache-directory "eshell/"))
-  (setq inhibit-splash-screen t)
-  (setq initial-scratch-message "")
-  (setq recentf-save-file (concat core-cache-directory "recentf"))
-  (setq ring-bell-function 'ignore)
-  (setq scroll-conservatively 101)
-  (setq scroll-preserve-screen-position t)
-
-  (setq-default indent-tabs-mode nil)
-#+end_src
-
-** custom
-
-#+begin_src emacs-lisp
-  (setq custom-file (concat core-cache-directory "custom.el"))
-  (load custom-file t)
-#+end_src
-
-** paren
-
-#+begin_src emacs-lisp
-  (electric-pair-mode +1)
-  (show-paren-mode +1)
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package rainbow-delimiters
-    :defer t
-    :init
-    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
-#+end_src
-
-** ace-link
-
-#+begin_src emacs-lisp
-  (use-package ace-link
-    :config
-    (ace-link-setup-default))
-#+end_src
-
-** company
+company is a completion engine for text.
 
 #+begin_src emacs-lisp
   (use-package company
@@ -260,7 +251,32 @@ Revert ~fci-rule-color~ to its original value.
     (make-variable-buffer-local 'company-backends))
 #+end_src
 
-** counsel
+ivy is a completion engine for mini-buffer.
+
+#+begin_src emacs-lisp
+  (use-package ivy
+    :demand t
+    :diminish ivy-mode
+    :bind (:map core-global-map
+           ("r" . ivy-resume))
+    :init
+    (setq ivy-count-format "(%d/%d) ")
+    (setq ivy-use-virtual-buffers t)
+    :config
+    (ivy-mode +1))
+
+  (use-package ivy-hydra)
+#+end_src
+
+ace-link
+
+#+begin_src emacs-lisp
+  (use-package ace-link
+    :config
+    (ace-link-setup-default))
+#+end_src
+
+counsel
 
 #+begin_src emacs-lisp
   (use-package counsel
@@ -281,8 +297,6 @@ Revert ~fci-rule-color~ to its original value.
     (counsel-projectile-on))
 #+end_src
 
-** env
-
 Get environment variables from the shell.
 
 #+begin_src emacs-lisp
@@ -292,100 +306,29 @@ Get environment variables from the shell.
     (exec-path-from-shell-initialize))
 #+end_src
 
-** fill-column-indicator
+swiper
 
 #+begin_src emacs-lisp
-  (use-package fill-column-indicator
-    :bind (:map core-global-map
-           ("tf" . fci-mode)))
+  (use-package swiper
+    :bind ("C-s" . swiper))
 #+end_src
 
-** hl-todo
+undo-tree
 
 #+begin_src emacs-lisp
-  (use-package hl-todo
-    :defer t
+  (use-package undo-tree
+    :pin gnu
+    :diminish undo-tree-mode
     :init
-    (add-hook 'prog-mode-hook #'hl-todo-mode))
-#+end_src
-
-** hydra
-
-#+begin_src emacs-lisp
-  (defun core-move-splitter-left (arg)
-    "Move window splitter left."
-    (interactive "p")
-    (if (let ((windmove-wrap-around))
-          (windmove-find-other-window 'right))
-        (shrink-window-horizontally arg)
-      (enlarge-window-horizontally arg)))
-
-  (defun core-move-splitter-right (arg)
-    "Move window splitter right."
-    (interactive "p")
-    (if (let ((windmove-wrap-around))
-          (windmove-find-other-window 'right))
-        (enlarge-window-horizontally arg)
-      (shrink-window-horizontally arg)))
-
-  (defun core-move-splitter-up (arg)
-    "Move window splitter up."
-    (interactive "p")
-    (if (let ((windmove-wrap-around))
-          (windmove-find-other-window 'up))
-        (enlarge-window arg)
-      (shrink-window arg)))
-
-  (defun core-move-splitter-down (arg)
-    "Move window splitter down."
-    (interactive "p")
-    (if (let ((windmove-wrap-around))
-          (windmove-find-other-window 'up))
-        (shrink-window arg)
-      (enlarge-window arg)))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package hydra)
-
-  (defhydra core-move-splitter ()
-    "splitter"
-    ("h" core-move-splitter-left)
-    ("j" core-move-splitter-down)
-    ("k" core-move-splitter-up)
-    ("l" core-move-splitter-right)
-    ("q" nil "quit"))
-#+end_src
-
-** ivy
-
-#+begin_src emacs-lisp
-  (use-package ivy
-    :demand t
-    :diminish ivy-mode
-    :bind (:map core-global-map
-           ("r" . ivy-resume))
-    :init
-    (setq ivy-count-format "(%d/%d) ")
-    (setq ivy-use-virtual-buffers t)
+    (setq undo-tree-auto-save-history t)
+    (setq undo-tree-history-directory-alist `((".*" . ,core-temporary-directory)))
     :config
-    (ivy-mode +1))
-
-  (use-package ivy-hydra)
+    (global-undo-tree-mode +1))
 #+end_src
 
-** linum
+** project
 
-#+begin_src emacs-lisp
-  (use-package linum
-    :bind (:map core-global-map
-           ("tn" . linum-mode))
-    :init
-    (setq linum-format "%d ")
-    (add-hook 'prog-mode-hook #'linum-mode))
-#+end_src
-
-** magit
+magit is an interface to git.
 
 #+begin_src emacs-lisp
   (use-package magit
@@ -398,7 +341,7 @@ Get environment variables from the shell.
            ("gs" . magit-status)))
 #+end_src
 
-** projectile
+projectile is a project interaction library.
 
 #+begin_src emacs-lisp
   (use-package projectile
@@ -425,39 +368,7 @@ Get environment variables from the shell.
     (projectile-global-mode +1))
 #+end_src
 
-** swiper
-
-#+begin_src emacs-lisp
-  (use-package swiper
-    :bind ("C-s" . swiper))
-#+end_src
-
-** undo-tree
-
-#+begin_src emacs-lisp
-  (use-package undo-tree
-    :pin gnu
-    :diminish undo-tree-mode
-    :init
-    (setq undo-tree-auto-save-history t)
-    (setq undo-tree-history-directory-alist `((".*" . ,core-temporary-directory)))
-    :config
-    (global-undo-tree-mode +1))
-#+end_src
-
-** whitespace
-
-#+begin_src emacs-lisp
-  (use-package whitespace
-    :diminish whitespace-mode
-    :bind (:map core-global-map
-           ("tw" . whitespace-mode))
-    :init
-    (setq whitespace-style '(face trailing empty))
-    (add-hook 'prog-mode-hook #'whitespace-mode))
-#+end_src
-
-** ace-window
+** windows
 
 #+begin_src emacs-lisp
   (use-package ace-window
@@ -467,8 +378,6 @@ Get environment variables from the shell.
     :init
     (setq aw-scope 'frame))
 #+end_src
-
-** window-purpose
 
 #+begin_src emacs-lisp
   (use-package window-purpose
@@ -482,19 +391,116 @@ Get environment variables from the shell.
     (purpose-mode +1))
 #+end_src
 
-** winner
-
 #+begin_src emacs-lisp
   (use-package winner
-    :bind
-    (:map core-global-map
-     ("wr" . winner-redo)
-     ("wu" . winner-undo))
+    :bind (:map core-global-map
+           ("wr" . winner-redo)
+           ("wu" . winner-undo))
     :init
     (winner-mode +1))
 #+end_src
 
-** programming
+** ui
+
+#+begin_src emacs-lisp
+  (blink-cursor-mode -1)
+
+  (menu-bar-mode -1)
+
+  (scroll-bar-mode -1)
+
+  (tool-bar-mode -1)
+#+end_src
+
+The mode line.
+
+#+begin_src emacs-lisp
+  (use-package spaceline
+    :pin melpa
+    :init
+    (setq powerline-default-separator 'bar)
+    (setq spaceline-highlight-face-func
+          #'spaceline-highlight-face-evil-state)
+    :config
+    (require 'spaceline-config)
+    (spaceline-emacs-theme))
+#+end_src
+
+The zenburn theme is easier for the eyes. But ~fci-rule-color~ is set
+to invisible.
+
+#+begin_src emacs-lisp
+  (use-package zenburn-theme
+    :config
+    (load-theme 'zenburn t)
+    (setq fci-rule-color "#383838"))
+#+end_src
+
+** program
+
+Draw a vertial line at ~fill-column~. It can be changed by setting
+~fci-rule-column~.
+
+#+begin_src emacs-lisp
+  (use-package fill-column-indicator
+    :bind (:map core-global-map
+           ("tf" . fci-mode)))
+#+end_src
+
+Highlight keywords in comments and strings.
+
+#+begin_src emacs-lisp
+  (use-package hl-todo
+    :bind (:map core-global-map
+           ("tt" . hl-todo-mode))
+    :init
+    (add-hook 'prog-mode-hook #'hl-todo-mode))
+#+end_src
+
+Show line numbers.
+
+#+begin_src emacs-lisp
+  (use-package linum
+    :bind (:map core-global-map
+           ("tn" . linum-mode))
+    :init
+    (setq linum-format "%d ")
+    (add-hook 'prog-mode-hook #'linum-mode))
+#+end_src
+
+Highlight text representing color codes.
+
+#+begin_src emacs-lisp
+  (use-package rainbow-mode
+    :diminish rainbow-mode
+    :bind (:map core-global-map
+           ("tr" . rainbow-mode))
+    :init
+    (add-hook 'prog-mode-hook 'rainbow-mode))
+#+end_src
+
+Highlight parens according to their depth.
+
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :defer t
+    :init
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+#+end_src
+
+Visualize and cleanup undesired whitespace.
+
+#+begin_src emacs-lisp
+  (use-package whitespace
+    :diminish whitespace-mode
+    :bind (:map core-global-map
+           ("tw" . whitespace-mode))
+    :init
+    (setq whitespace-style '(face trailing empty))
+    (add-hook 'prog-mode-hook #'whitespace-mode))
+#+end_src
+
+An underscore is part of a word in Vim.
 
 #+begin_src emacs-lisp
   (defun core-prog-mode-config ()
